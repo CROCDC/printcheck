@@ -13,6 +13,10 @@ numbers; the exit code is 1 when anything FAILed.
     preflight.py ... --json report.json --nozzle 0.4 --layer 0.2
 
 Needs trimesh, shapely and numpy (the project venv usually has them).
+
+GO means the file should print, not that the part works. Design the part
+for its job first; never shape it to these thresholds or override one to
+go green (docs/USAGE.md, section 0).
 """
 
 import argparse

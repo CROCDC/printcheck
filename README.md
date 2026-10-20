@@ -17,6 +17,12 @@ print on one real printer failed, or nearly did, and the corpus of those
 prints is in this repo. `calibrate.py` replays the corpus and refuses any
 change that lets a known failure through or blocks a print that held.
 
+> **printcheck is not the design target.** It says whether a file will
+> print, not whether the part works. Design the part for its job (fits,
+> loads, assembly), then ask printcheck. Shaping a part to its thresholds,
+> overriding a rule to go green or dropping a feature because it WARNs is
+> wrong: see [`docs/USAGE.md`, section 0](docs/USAGE.md#0-printcheck-is-not-the-design-target).
+
 > **Coming here as an AI agent?** Read [`AGENTS.md`](AGENTS.md) first. It
 > has the invariants, the task recipes and the traps, in that order.
 
@@ -96,6 +102,19 @@ python -m pytest                                      # the suite, 100 % coverag
 
 `python preflight.py ...` and `python calibrate.py ...` work the same
 without installing, from a checkout whose folder is named `printcheck`.
+It runs on Linux, macOS and Windows (CI covers all three).
+
+Or with Docker, nothing installed but Docker:
+
+```bash
+docker build -t printcheck .
+docker run --rm -v "$PWD:/work" printcheck part.stl                 # a file in the current folder
+docker run --rm -v "$PWD:/work" printcheck project.3mf --layers 30
+docker run --rm -w /printcheck --entrypoint python printcheck -m pytest   # the suite inside the image
+```
+
+On Windows PowerShell the mount is `-v "${PWD}:/work"`. The image has no
+Bambu Studio, so `--slice` reports it as missing; everything else runs.
 
 ## Examples: one file per verdict
 
@@ -234,7 +253,7 @@ A part can tune it from its `spec.py`:
 | `BAMBU` | `{"machine", "process", "process_overrides", "filaments": [(preset, colour[, overrides])]}`: the presets are flattened so the engine judges with the real speeds, cooling and slow-down ramp |
 | `LAYER` | layer height for every layer-based rule (default 0.2) |
 | `MATERIAL` | filament type when `BAMBU` names none |
-| `PRINTCHECK` | a dict overriding any `RULES` threshold, e.g. `{"max_unsupported_mm2": 400}`, with the reason and date in a comment next to it |
+| `PRINTCHECK` | a dict overriding any `RULES` threshold, e.g. `{"max_unsupported_mm2": 400}`, with a measured reason (a test print, a measurement) and the date next to it; never to make the suite pass |
 
 `examples/workspace/demo` is the smallest working project in this layout
 (its `lib/printing.py` holds the two functions the adapter imports,
@@ -301,8 +320,10 @@ python -m pytest tests/test_shapes.py -q     # one file
 | `tests/test_examples.py` | `examples/` is what `build.py` writes, and each example gives its verdict |
 | `tests/helpers.py`, `tests/conftest.py` | shared shapes and lookups; the `rep` and `rules` fixtures |
 
-CI (`.github/workflows/ci.yml`) runs the suite on Python 3.10 and 3.12,
-then the example corpus and the real corpus through `calibrate.py`.
+CI (`.github/workflows/ci.yml`) runs the suite on Linux, macOS and Windows,
+Python 3.10 and 3.12, then the example corpus and the real corpus through
+`calibrate.py`; a separate job builds the Docker image, runs the suite
+inside it and judges an example through it.
 
 ## Repository map
 
@@ -335,6 +356,7 @@ printcheck/
 │   └── ARCHITECTURE.md  data contracts and extension points, for changing the code
 ├── AGENTS.md         the guide for AI agents working on this repo (CLAUDE.md imports it)
 ├── pyproject.toml    package, commands, pytest and coverage settings
+├── Dockerfile        the same environment anywhere: `docker run ... printcheck part.stl`
 ├── CHANGELOG.md
 └── LICENSE           MIT
 ```
@@ -343,6 +365,7 @@ printcheck/
 
 | if you want to | read |
 |---|---|
+| design a part with printcheck in the loop (read first) | [`docs/USAGE.md`, section 0](docs/USAGE.md#0-printcheck-is-not-the-design-target) |
 | run it on a file or wire it into a project | [`docs/USAGE.md`](docs/USAGE.md) |
 | know why a threshold has its value | [`docs/RULES.md`](docs/RULES.md) |
 | understand a `sim` finding or a ledger column | [`docs/SIMULATION.md`](docs/SIMULATION.md) |

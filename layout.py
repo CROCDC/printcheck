@@ -5,6 +5,10 @@ whatever its manifest lists, so a part cannot leave the shared rules out.
 It judges each print file the way the export writes it: the variant turned
 into print orientation, its companions in the same frame, a cut piece as the
 bodies it splits into.
+
+A part designed for its job, then checked here. Not a part designed to pass
+here: a PRINTCHECK override needs a measured reason, never "so the suite
+passes" (docs/USAGE.md, section 0).
 """
 
 import os

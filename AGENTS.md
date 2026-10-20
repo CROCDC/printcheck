@@ -7,6 +7,25 @@ and the record of those prints (`corpus/`) is the test that every change
 has to pass. Read this page before you touch anything; `README.md` is the
 overview, `docs/` the detail.
 
+## Two kinds of agent, one rule
+
+You may be here to **work on printcheck** (a rule, a bug, the docs), or
+because a project you are **designing a part for** runs it. If it is the
+second: printcheck is not your design target. Design the part for its
+job, then ask printcheck whether it prints; never read the engine, its
+thresholds or its tests to find the shape that passes. Landing just under
+a threshold, overriding one in `spec.PRINTCHECK` to go green, splitting
+or nudging bodies so a rule judges them apart, adding geometry that only
+serves the number, or dropping a feature because it raised a WARN are all
+the same mistake. The full list and the right order:
+[`docs/USAGE.md`, section 0](docs/USAGE.md#0-printcheck-is-not-the-design-target).
+When the only fix for a finding would hurt the function, bring the
+trade-off to the owner with both numbers.
+
+If you are working on printcheck itself, the same thing seen from the
+other side: never loosen a rule because a part someone is designing
+fails it. That part is the evidence to look at, not the thing to fix.
+
 ## Orientation in one minute
 
 | question | answer |
@@ -24,7 +43,8 @@ overview, `docs/` the detail.
 
 1. **A threshold moves only with a reason, a date and a green
    `calibrate.py`.** The reason goes in `docs/RULES.md`, "Learnings". Never
-   loosen a rule to make one file pass. If a part legitimately needs
+   loosen a rule to make one file pass, and never because a part being
+   designed fails it. If a part legitimately needs
    another value, that part sets it in its own `spec.PRINTCHECK` with a
    dated comment, and the default stays.
 2. **Every finding carries its number.** The measured value, the

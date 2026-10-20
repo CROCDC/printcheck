@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main, windows-ci]
+    branches: [main]
     tags: ["v*"]
   pull_request:
 

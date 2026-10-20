@@ -4,9 +4,62 @@ printcheck is the one place that knows what makes a print fail on the
 owner's printer (Bambu Lab A2L, 0.4 nozzle, textured PEI, bed slinger).
 Every 3D project of the owner's runs it; nothing about printability
 lives in a project. Install it once with `pip install -e ".[dev]"` from
-the checkout (or point a project at a checkout named `printcheck`). This page is the how-to. The rules and their reasons
-are in `RULES.md`, the layer simulation in `SIMULATION.md`, the prints
-that taught them in `FAILURES.md`.
+the checkout (or point a project at a checkout named `printcheck`).
+This page is the how-to. The rules and their reasons are in `RULES.md`,
+the layer simulation in `SIMULATION.md`, the prints that taught them in
+`FAILURES.md`.
+
+## 0. printcheck is not the design target
+
+**Read this before designing a part with printcheck in the loop.**
+
+A part exists to do a job: fit the thing it was measured against, carry
+its load, assemble, last. printcheck answers one narrower question: will
+this file come off the A2L in one piece? A green verdict is necessary,
+never sufficient. It does not know what the part is for, and it cannot
+see a fit that is wrong, a wall too weak for its load, a feature that was
+left out, or a clearance that was guessed.
+
+So designing *to the validator* is wrong: reading `preflight.py`, its
+thresholds or its tests to find the shape that passes, instead of
+designing the part that works and then asking whether it prints. Every
+one of these is that mistake, and none of them is allowed:
+
+- **Landing just under a threshold.** Thickening a member until its
+  slenderness reads 59 against a FAIL at 60, or a footprint until the
+  aspect reads 2.9 against 3. The numbers are calibrated on a handful of
+  prints; the threshold is where failures started, not a safe line. Fix
+  the mechanism the finding names (tie the members together, widen the
+  base, print it another way), with margin.
+- **Overriding a threshold to go green.** A `PRINTCHECK` entry in
+  `spec.py` (or `--rules`) is for a measured reason specific to that part,
+  written next to it with a date and the evidence: a test print that held,
+  a measurement. "So the suite passes" is not a reason. A finding you think
+  is wrong goes to the owner and to the corpus (`corpus/outcomes.tsv`),
+  where the threshold gets recalibrated for everyone.
+- **Routing around what a rule can see.** Splitting one part into
+  separate objects so the rules judge them apart, nudging bodies on the
+  plate, adding tabs, ribs or sacrificial posts that serve only the
+  number, or choosing a print orientation that loads the layers along
+  the part's working stress, because that orientation reads green.
+- **Deleting function the validator cannot see.** Dropping a groove,
+  a fillet, a thread, a snap or a pocket because it raised a WARN, without
+  saying so. The oval lid's groove (2026-10-20) went out modelled solid
+  with every check green; the part did not fit.
+- **Treating green as done.** A GO says nothing about whether the part
+  does its job. The part's own checks (fits against the owner's
+  measurements, loads, assembly) and the `views` figure come first.
+
+The right order:
+
+1. Design for the function: the measurements, the loads, the fits, how it
+   assembles. Write those down as the part's own checks.
+2. Run printcheck. A FAIL is information about the physics of the print:
+   fix its cause in a way that keeps the function.
+3. When the only fix that clears a finding would hurt the function, stop
+   and bring the trade-off to the owner, with both numbers. Never resolve
+   it silently in either direction.
+4. Say what printcheck cannot judge for this part, every time.
 
 ## 1. From a project in the kailua layout (`lib/` + `parts/<part>/`)
 
@@ -34,7 +87,7 @@ What the part tells it, all optional, in `spec.py`:
 | `BAMBU` | `{"machine", "process", "process_overrides", "filaments": [(preset, colour[, overrides])]}`. When Bambu Studio is installed the presets are flattened (`printcheck/presets.py`) and the engine judges with the real speeds, cooling and slow-down ramp; without it only the material and the brim reach it |
 | `LAYER` | layer height for every layer-based rule (default 0.2) |
 | `MATERIAL` | filament type when `BAMBU` names none |
-| `PRINTCHECK` | a dict overriding any `RULES` threshold, e.g. `{"max_unsupported_mm2": 400}`; say why next to it, dated. A threshold moves only with a reason |
+| `PRINTCHECK` | a dict overriding any `RULES` threshold, e.g. `{"max_unsupported_mm2": 400}`; say why next to it, dated, with the evidence (a test print that held, a measurement). Never to make the suite pass (section 0) |
 
 A new project copied from `taller` gets the hook through `lib/run.py` and
 `lib/part.py` (`Variant.rotation`, `Part.rotation_of`, `PrintFile.also`).

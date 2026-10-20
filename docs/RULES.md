@@ -5,6 +5,11 @@ A threshold changes only with a reason and a date in the learnings below,
 and only if `calibrate.py` stays green on the corpus (`corpus/outcomes.tsv`).
 This is the canonical copy; the `print-preflight` skill points here.
 
+A threshold is where the corpus's failures began, not a safe line to
+design up to: 59 against a FAIL at 60 is not a margin. Fix the mechanism a
+finding names, with room to spare, and never shape a part to land under a
+number or override one to go green (`USAGE.md`, section 0).
+
 ## Geometry (STL / 3MF parts)
 
 | rule | default | why | source |

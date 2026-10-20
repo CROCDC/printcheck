@@ -252,7 +252,9 @@ DEMO_PARTS = {
         doc="A post 3 x 3 x 100, printed in two pieces cut at z = 50: each piece is NO-GO.",
         meshes={"nogo_post": None},
         files=[{"name": "nogo_post", "variant": "nogo_post", "cut": ["z", 50.0]}],
-        extra='PRINTCHECK = {"max_slenderness_warn": 40.0}   # the default, stated to show the hook\n'),
+        extra=('# PRINTCHECK moves a threshold for this part only, with a measured reason and a date;\n'
+               '# never to make the suite pass. Here it restates the default, to show the hook.\n'
+               'PRINTCHECK = {"max_slenderness_warn": 40.0}\n')),
 }
 
 

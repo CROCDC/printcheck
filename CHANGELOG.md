@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Runs on Windows: sweep paths in `calibrate.py` reports use `/` on every
+  OS; `examples/build.py` writes the same bytes everywhere (the zip's
+  creating OS is fixed, text is LF, `.gitattributes` keeps LF on
+  checkout); the tests' fake Bambu Studio works on Windows.
+- A `Dockerfile`: `docker run --rm -v "$PWD:/work" printcheck part.stl`.
+- CI on Linux, macOS and Windows, plus a Docker job.
+- Stated in every place an agent meets it (README, AGENTS.md, USAGE.md
+  section 0, RULES.md, `--help`, the layout adapter) that printcheck is not
+  the design target: a part is designed for its job and then checked, never
+  shaped to pass.
+
 ## 0.1.0 (2026-10-20)
 
 First release as a repository of its own (it lived inside a folder of 3D
