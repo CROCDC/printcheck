@@ -1,0 +1,14 @@
+# Versions printcheck is developed and calibrated against (Python 3.12).
+numpy>=2.0
+scipy>=1.13
+trimesh>=4.4
+shapely>=2.0
+# trimesh extras the engine reaches: mesh.split (networkx), ray casting for wall thickness (rtree).
+networkx>=3.0
+rtree>=1.2
+# Boolean unions in tests/test_shapes.py; without it some shapes stay separate bodies.
+manifold3d>=2.4
+# views.py figures; optional for the engine, needed for --views and project runs.
+matplotlib>=3.8
+# Optional test runner; tests/test_shapes.py also runs as a plain script.
+pytest>=8.0
