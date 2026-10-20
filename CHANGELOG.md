@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-10-20)
 
 - Runs on Windows: sweep paths in `calibrate.py` reports use `/` on every
   OS; `examples/build.py` writes the same bytes everywhere (the zip's

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "printcheck"
-version = "0.1.0"
+version = "0.1.1"
 description = "Printability validator for FDM 3D prints: GO / NO-GO with measured numbers, a layer-by-layer simulation, calibrated on a corpus of real failures."
 readme = "README.md"
 requires-python = ">=3.10"
