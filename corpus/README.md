@@ -7,10 +7,13 @@ fired on which outcome. A threshold may move only if the replay stays
 green: every failure still caught by at least one FAIL, no held print
 turned into a NO-GO.
 
-`files/` keeps what the projects no longer have: the geometry of a failed
-print rebuilt from its model with the parameters of the day (`rebuilt` in
-the `kept` column), because the repos keep only the current version and
-there is no git. A rebuilt file is a reconstruction: it says so in `notes`.
+`files/` holds every file of the corpus, so the replay needs nothing
+outside this repository. Three kinds: the file as it was sent (`yes` in
+`kept`), the geometry of a failed print rebuilt from its model with the
+parameters of the day (`rebuilt`), because the 3D projects keep only their
+current version and have no git, and a project's file copied in later
+(the `notes` say from where and when, and whether it postdates the print).
+A rebuilt file is a reconstruction: it says so in `notes`.
 
 ## Columns
 
@@ -18,7 +21,7 @@ there is no git. A rebuilt file is a reconstruction: it says so in `notes`.
 |---|---|
 | `id` | K = kailua-tablero, T = taller, P = the panel; numbered in print order |
 | `date` | when it was printed (absolute) |
-| `file` | path relative to `projects-3D/`; `+` joins the STLs of one print (body first); `-` when nothing survives |
+| `file` | path relative to the repository root (`corpus/files/...`); `+` joins the STLs of one print (body first); `-` when nothing survives |
 | `kept` | `yes` the file as sent, `rebuilt` re-rendered from the model, `no` nothing |
 | `rotate` | for loose STLs only: `--rotate` that puts them in print orientation |
 | `material` | what was loaded, as the owner reported it |
@@ -37,6 +40,6 @@ there is no git. A rebuilt file is a reconstruction: it says so in `notes`.
 After every print, held or not. If it failed: ask for the photo of the bed
 and of the loose pieces' faces first (the owner clears the bed fast), copy
 the exact file that was sent into `files/` if the project will overwrite
-it, fill the row, run `python printcheck/calibrate.py`. If the replay does
+it, fill the row, run `printcheck-calibrate`. If the replay does
 not catch it, that is the next rule (`docs/FAILURES.md`, "how a failure
 becomes a rule").

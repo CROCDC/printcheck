@@ -1,0 +1,7 @@
+id	date	project	part	file	kept	rotate	material	recipe	outcome	failed_at	hms	observed	cause	rule_then	rule_now	notes
+E01	2026-10-20	examples	go_block	examples/stl/go_block.stl	yes				held			synthetic: a block that cannot fail	-	-	GO	example row: a held print the engine must not refuse
+E02	2026-10-20	examples	caveats_tower	examples/bambu/caveats_tower.3mf	yes				held			synthetic: tall on its base, held	-	-	GO WITH CAVEATS	example row: WARNs alone never contradict a held print
+E03	2026-10-20	examples	nogo_post	examples/stl/nogo_post.stl	yes				came_off			synthetic: tipped over	aspect 33:1, slenderness 115	-	NO-GO	example row: a failure the engine catches
+E04	2026-10-20	examples	label	examples/stl/label_body.stl+examples/stl/label_bar.stl	yes	z,0			came_apart			synthetic: an admitted miss	open	-	missed: every rule green	example row: a known miss is reported, not counted
+E05	2026-10-20	examples	label	examples/bambu/nogo_label_tower_film.gcode.3mf	yes				unknown			synthetic	-	-	NO-GO	example row: unlabelled, shown but never judged
+E06	2026-10-20	examples	lost	-	no				held			-	-	-	-	example row: nothing kept, listed as not kept

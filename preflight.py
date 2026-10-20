@@ -253,6 +253,11 @@ def check_mesh(name, mesh, rules, rep, role="main", fill=()):
         rep.info("tiny_islands", f"islands under {rules['min_island_mm2']} mm2 on {len(tiny)} "
                                  f"layer(s): {tiny[:6]}")
     thin_rows = [r for r in rows if r["islands"]]
+    if not thin_rows:
+        # An open side wall leaves no closed outline at any height; every
+        # rule below measures outlines (2026-10-20).
+        rep.fail("no_section", "no layer has a closed outline: the slicer has nothing to fill")
+        return rows
     worst = min(thin_rows, key=lambda r: r["thinnest"])
     rep.info("thinnest", f"thinnest feature {worst['thinnest']:.2f} mm at z={worst['z']}")
     if role == "inlay":
@@ -345,11 +350,8 @@ def check_adhesion(parts, settings, rules, rep):
     # Which object a body belongs to, for that object's own brim and speeds.
     def own_settings(b):
         c = b.bounds.mean(axis=0)
-        for p in parts:
-            lo_, hi_ = p["mesh"].bounds
-            if np.all(c >= lo_ - 0.5) and np.all(c <= hi_ + 0.5):
-                return {**st, **p.get("settings", {})}
-        return st
+        return next(({**st, **p.get("settings", {})} for p in parts
+                     if np.all(c >= p["mesh"].bounds[0] - 0.5) and np.all(c <= p["mesh"].bounds[1] + 0.5)), st)
     bare = []
     all_first = unary_union([f for f in first if f is not None and not f.is_empty])
     embedded = []
@@ -884,10 +886,8 @@ def check_gcode(text, rules, rep, settings=None):
         nonlocal pending
         if pending is None:
             return
-        L, d, v, start_stop, _ = pending
+        L, d, v, start_stop, _ = pending      # only queued with v > 0 and d > 0
         pending = None
-        if v <= 0 or d <= 0:
-            return
         stops = start_stop + end_stop
         reach = v * v / acc * (stops / 2.0)          # distance to speed up and down
         if stops == 0 or d >= reach:

@@ -6,3 +6,10 @@ __pycache__/
 # --json / --views output written while debugging
 *_views.png
 out/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+dist/

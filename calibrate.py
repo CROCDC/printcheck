@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Replay the engine over the outcome corpus and say which rule caught what.
 
-    python printcheck/calibrate.py             # the corpus (corpus/outcomes.tsv)
-    python printcheck/calibrate.py --sweep     # plus every print file of every project
-    python printcheck/calibrate.py --report corpus/report-2026-10-15.md
+    python calibrate.py                        # the corpus (corpus/outcomes.tsv)
+    python calibrate.py --sweep ../            # plus every print file of every project under ../
+    python calibrate.py --corpus examples/corpus.tsv
+    python calibrate.py --report corpus/report-2026-10-15.md
+
+Corpus paths are relative to the corpus file's own repo: this directory.
 
 For every corpus row that still has a file, the engine runs the way the
 print was sent (3MF, sliced 3MF, or loose STLs in print orientation) and
@@ -30,7 +33,6 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
 ENGINE = os.path.join(HERE, "preflight.py")
 FAILED = {"came_off", "deformed", "broke", "came_apart", "nozzle_wrap", "aborted"}
 
@@ -42,7 +44,7 @@ def run_engine(files, rotate=None, extra=()):
     cmd = [sys.executable, ENGINE, *files, "--quiet-info", "--json", out, *extra]
     if rotate:
         cmd += ["--rotate", rotate]
-    r = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=HERE)
     try:
         with open(out) as fh:
             data = json.load(fh)
@@ -57,36 +59,41 @@ def codes(data, level):
     return sorted({f"{i['stage'].split(':')[0]}/{i['code']}" for i in data["findings"] if i["level"] == level})
 
 
-def corpus_rows():
-    with open(os.path.join(HERE, "corpus", "outcomes.tsv")) as fh:
+def corpus_rows(path):
+    with open(path) as fh:
         return list(csv.DictReader(fh, delimiter="\t"))
 
 
-def project_files():
+def project_files(root):
+    """Every print file of every project in the kailua layout under `root`,
+    as absolute paths."""
     out = []
-    for proj in sorted(os.listdir(ROOT)):
-        parts = os.path.join(ROOT, proj, "parts")
+    for proj in sorted(os.listdir(root)):
+        parts = os.path.join(root, proj, "parts")
         if not os.path.isdir(parts):
             continue
         for part in sorted(os.listdir(parts)):
             for folder in ("to_print", "printed", "old"):
                 d = os.path.join(parts, part, "print", folder)
                 if os.path.isdir(d):
-                    out += [os.path.relpath(os.path.join(d, n), ROOT) for n in sorted(os.listdir(d))
+                    out += [os.path.abspath(os.path.join(d, n)) for n in sorted(os.listdir(d))
                             if n.endswith(".3mf")]
     return out
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--sweep", action="store_true", help="also run every print file of every project (unlabelled)")
+    ap.add_argument("--corpus", default=os.path.join(HERE, "corpus", "outcomes.tsv"),
+                    help="outcomes TSV to replay (default corpus/outcomes.tsv)")
+    ap.add_argument("--sweep", metavar="DIR",
+                    help="also run every print file of every kailua-layout project under DIR (unlabelled)")
     ap.add_argument("--report", help="write the tables as Markdown here")
     ap.add_argument("--only", help="comma-separated corpus ids")
     a = ap.parse_args(argv)
 
     lines, bad = [], 0
     per_rule = collections.defaultdict(lambda: {"failed": 0, "held": 0, "unknown": 0})
-    rows = corpus_rows()
+    rows = corpus_rows(a.corpus)
     if a.only:
         keep = set(a.only.split(","))
         rows = [r for r in rows if r["id"] in keep]
@@ -98,7 +105,7 @@ def main(argv=None):
             lines.append(f"| {r['id']} | {r['date']} | {r['part']} ({r['project']}) | {r['outcome']} | not kept | | | n/a |")
             continue
         files = r["file"].split("+")
-        missing = [f for f in files if not os.path.exists(os.path.join(ROOT, f))]
+        missing = [f for f in files if not os.path.exists(os.path.join(HERE, f))]
         if missing:
             lines.append(f"| {r['id']} | {r['date']} | {r['part']} | {r['outcome']} | FILE MISSING {missing} | | | n/a |")
             bad += 1
@@ -136,18 +143,19 @@ def main(argv=None):
         lines.append("\n## Sweep: every print file of every project (outcome not in the corpus unless listed above)\n")
         lines.append("| file | verdict | FAIL | WARN |")
         lines.append("|---|---|---|---|")
-        labelled = {f for r in rows for f in r["file"].split("+")}
-        for f in project_files():
+        labelled = {os.path.abspath(os.path.join(HERE, f)) for r in rows for f in r["file"].split("+")}
+        for f in project_files(a.sweep):
             data = run_engine([f])
             fails, warns = codes(data, "FAIL"), codes(data, "WARN")
             tag = " (corpus)" if f in labelled else ""
-            lines.append(f"| {f}{tag} | {data['verdict']} | {', '.join(fails) or '-'} | {', '.join(warns) or '-'} |")
+            name = os.path.relpath(f, a.sweep)
+            lines.append(f"| {name}{tag} | {data['verdict']} | {', '.join(fails) or '-'} | {', '.join(warns) or '-'} |")
 
     text = "\n".join(lines)
     print(text)
     if a.report:
         with open(a.report, "w") as fh:
-            fh.write(f"# printcheck calibration report\n\nGenerated by `printcheck/calibrate.py`.\n\n{text}\n")
+            fh.write(f"# printcheck calibration report\n\nGenerated by `calibrate.py`.\n\n{text}\n")
     print(f"\n{'OK' if not bad else 'NOT OK'}: {bad} corpus row(s) contradict the engine")
     return 1 if bad else 0
 

@@ -2,17 +2,20 @@
 
 printcheck is the one place that knows what makes a print fail on the
 owner's printer (Bambu Lab A2L, 0.4 nozzle, textured PEI, bed slinger).
-Every 3D project under `projects-3D/` runs it; nothing about printability
-lives in a project. This page is the how-to. The rules and their reasons
+Every 3D project of the owner's runs it; nothing about printability
+lives in a project. Install it once with `pip install -e ".[dev]"` from
+the checkout (or point a project at a checkout named `printcheck`). This page is the how-to. The rules and their reasons
 are in `RULES.md`, the layer simulation in `SIMULATION.md`, the prints
 that taught them in `FAILURES.md`.
 
 ## 1. From a project in the kailua layout (`lib/` + `parts/<part>/`)
 
-Nothing to install. `lib/run.py` already ends with:
+Nothing to install when the projects sit next to a checkout named
+`printcheck` (the owner's `projects-3D/` workspace). `lib/run.py` already
+ends with:
 
 ```python
-sys.path.insert(0, <projects-3D/>)          # where printcheck lives
+sys.path.insert(0, <the folder that holds printcheck/>)   # or pip install it
 from printcheck import layout as printcheck
 ...
 printcheck.printability(ctx, report.Section(last + 1, "PRINTABILITY (projects-3D/printcheck)"))
@@ -35,24 +38,28 @@ What the part tells it, all optional, in `spec.py`:
 
 A new project copied from `taller` gets the hook through `lib/run.py` and
 `lib/part.py` (`Variant.rotation`, `Part.rotation_of`, `PrintFile.also`).
+The smallest working example of the layout is `examples/workspace/demo`:
+what the adapter needs from a project is `lib/printing.py` with
+`orientation(spec)` and `pieces(mesh, cut)`, and a `ctx` with `part`,
+`spec` and `meshes`.
 
 ## 2. From the command line, on any file
 
 ```bash
-PY=taller/.venv/bin/python           # any project venv: trimesh, shapely, numpy, scipy
-P=printcheck/preflight.py
+# `printcheck` is the installed command; `python preflight.py` is the same thing
+P=printcheck
 
-$PY $P part.stl [letters.stl] --rotate x,180      # loose STLs, body first, into print orientation
-$PY $P project.3mf                                # a Bambu project: settings + geometry + simulation
-$PY $P project.3mf --slice                        # ... and slice it with Bambu Studio's CLI, judge the G-code
-$PY $P project.gcode.3mf                          # what the printer receives
-$PY $P plate_1.gcode                              # bare G-code
+$P part.stl [letters.stl] --rotate x,180      # loose STLs, body first, into print orientation
+$P project.3mf                                # a Bambu project: settings + geometry + simulation
+$P project.3mf --slice                        # ... and slice it with Bambu Studio's CLI, judge the G-code
+$P project.gcode.3mf                          # what the printer receives
+$P plate_1.gcode                              # bare G-code
 
-$PY $P project.3mf --layers 30                    # the layer ledger, 30 rows
-$PY $P project.3mf --at 45                        # everything at z = 45 mm
-$PY $P project.3mf --json out.json --quiet-info   # keep the evidence, hide the INFO lines
-$PY $P project.3mf --layer 0.16 --nozzle 0.4 --rules my_rules.json
-$PY $P project.3mf --views out/                   # the figure: angle, plan, cut across y, cut across x
+$P project.3mf --layers 30                    # the layer ledger, 30 rows
+$P project.3mf --at 45                        # everything at z = 45 mm
+$P project.3mf --json out.json --quiet-info   # keep the evidence, hide the INFO lines
+$P project.3mf --layer 0.16 --nozzle 0.4 --rules my_rules.json
+$P project.3mf --views out/                   # the figure: angle, plan, cut across y, cut across x
 ```
 
 Exit code 1 on NO-GO (any FAIL), so a pipeline can gate on it.
@@ -113,17 +120,19 @@ it means for this part. Never downgrade a FAIL silently.
    exact one that was sent into `corpus/files/`.
 2. If it failed: ask for the photo of the bed and of the loose pieces'
    faces before anything else.
-3. `python printcheck/calibrate.py` replays every corpus row. A failure the
+3. `printcheck-calibrate` replays every corpus row. A failure the
    engine calls GO is the next rule; a held print it calls NO-GO is a rule
-   to look at. `--sweep` adds every print file of every project.
+   to look at. `--sweep DIR` adds every print file of every kailua-layout
+   project under DIR.
 4. Write the rule in `preflight.py` (or `simulate.py`), its threshold in
    `RULES`, its reason in `RULES.md`, the story in `FAILURES.md`. Run
-   `calibrate.py` again and `tests/test_shapes.py` (synthetic shapes with a
-   known outcome): green or it does not go in.
+   `printcheck-calibrate` again and `pytest` (synthetic shapes with a known
+   outcome, 100 % coverage): green or it does not go in.
 
 ## 6. Troubleshooting
 
-- `ModuleNotFoundError: trimesh`: use a project venv (`*/.venv/bin/python`).
+- `ModuleNotFoundError: trimesh` or `printcheck`: install the package in
+  the venv you run with (`pip install -e ".[dev]"`).
 - `Bambu Studio not found`: `--slice` and preset flattening need
   `/Applications/BambuStudio.app`; set `BAMBU_STUDIO` to another path.
 - A big part takes 30-60 s: the ray-sampled wall thickness and the

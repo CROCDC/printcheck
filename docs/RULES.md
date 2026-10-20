@@ -304,3 +304,9 @@ Append dated bullets; convert relative dates to absolute. Merge duplicates.
   speed. On the three-piece plates the engine reads 39 s a layer against
   the slicer's 49-54: still under, never over, so the `min_layer_time_s`
   floor keeps its margin. The one FAIL on a held print is gone.
+- **2026-10-20, an open side wall crashed the mesh stage.** A mesh with a
+  side face missing gives no closed outline at any layer; `check_mesh`
+  called `min()` on no rows and the exception took the whole verdict with
+  it (found by the coverage suite, `tests/test_geometry.py`). New code
+  `mesh/no_section` FAIL: "no layer has a closed outline", and the stage
+  stops there, next to the `watertight` FAIL that names the cause.

@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      # 100 % line and branch coverage is a gate (pyproject: fail_under = 100).
+      - run: python -m pytest --cov --cov-report=term-missing
+      # The example corpus and demo workspace: every kind of row calibrate.py knows.
+      - run: python calibrate.py --corpus examples/corpus.tsv --sweep examples/workspace
+      # The real corpus: every known failure caught, no held print refused.
+      - run: python calibrate.py

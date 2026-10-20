@@ -112,10 +112,10 @@ look at the printer.
 ## Reading the ledger
 
 ```
-python printcheck/preflight.py part.3mf --layers 30     # 30 rows, evenly thinned
-python printcheck/preflight.py part.3mf --layers all
-python printcheck/preflight.py part.3mf --at 45         # everything at z = 45 mm
-python printcheck/preflight.py part.3mf --json out.json # "simulation": the whole ledger
+printcheck part.3mf --layers 30     # 30 rows, evenly thinned
+printcheck part.3mf --layers all
+printcheck part.3mf --at 45         # everything at z = 45 mm
+printcheck part.3mf --json out.json # "simulation": the whole ledger
 ```
 
 A healthy part reads: `s*` at or above the floor with no `!` past the
@@ -143,4 +143,6 @@ slow-down-by-height), `CoolingBuffer.cpp`, `PartPlate.cpp`
 presets; PrusaSlicer `SupportSpotsGenerator` constants (nozzle push 10 g,
 reimplemented, not ported); Spoerk 2018 and Kascak 2024 for the adhesion
 numbers; the owner's prints in `corpus/outcomes.tsv`. The research notes
-with every link: `projects-3D/plans/printcheck-a2l-research/`.
+with every link live in the owner's workspace
+(`projects-3D/plans/printcheck-a2l-research/`), not in this repository;
+the sources above are the ones the code depends on.

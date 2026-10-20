@@ -16,7 +16,8 @@ overview, `docs/` the detail.
 | which print taught it? | `docs/FAILURES.md`, `corpus/outcomes.tsv` |
 | how does the layer simulation work? | `simulate.py`, `docs/SIMULATION.md` |
 | what are the data contracts? | `docs/ARCHITECTURE.md` |
-| how do I know I did not break it? | `tests/test_shapes.py` and `calibrate.py`, both green |
+| how do I know I did not break it? | `pytest` (100 % coverage gate) and `printcheck-calibrate`, both green |
+| files with a known verdict to try? | `examples/` (GO, GO WITH CAVEATS, NO-GO; rebuilt by `examples/build.py`) |
 | who calls it? | the CLI, `layout.py` from sibling projects' `lib/run.py`, the `print-preflight` skill |
 
 ## Invariants: do not break these
@@ -50,29 +51,32 @@ overview, `docs/` the detail.
 10. **Do not rename finding codes** without updating the corpus
     `rule_now` column and noting it in `docs/RULES.md`: `calibrate.py`
     compares by `stage/code`.
+11. **Coverage stays at 100 %, line and branch.** New code arrives with
+    the tests that reach every branch. Do not add `# pragma: no cover` or
+    lower `fail_under`; if a branch cannot be reached by any input, it is
+    dead code: remove it and say so.
+12. **`examples/` is generated.** Change `examples/build.py` and run it;
+    never hand-edit a file under `examples/stl`, `examples/bambu` or
+    `examples/workspace/demo/parts`. `tests/test_examples.py` fails on a
+    stale file.
+13. **The repository is self-contained.** Tests, examples and the corpus
+    never read outside it. A corpus file goes into `corpus/files/`; paths
+    in `outcomes.tsv` are relative to the repository root.
 
 ## Before and after any change
 
-Run from the **parent of `printcheck/`** (the package imports itself as
-`printcheck`, and corpus paths are relative to that directory). Use a
-Python that has `requirements.txt` installed, including `manifold3d`.
-
 ```bash
-PY=printcheck/.venv/bin/python        # or any sibling project's .venv/bin/python with the deps
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"   # once
+source .venv/bin/activate
 
-$PY printcheck/tests/test_shapes.py   # 11 synthetic shapes; every one must say "ok"
-$PY printcheck/calibrate.py           # must end "OK: 0 corpus row(s) contradict the engine"
+python -m pytest                 # every test, coverage gate at 100 % (line + branch)
+printcheck-calibrate             # must end "OK: 0 corpus row(s) contradict the engine"
 ```
 
-In a bare clone (without the sibling projects) corpus rows that point
-outside `printcheck/corpus/files/` print `FILE MISSING` and count as
-contradictions. That is the environment, not your change: compare against
-a run of the same command before your change, and say which rows could
-not be replayed.
-
 A change to a threshold, a stage or the simulation also gets
-`calibrate.py --report printcheck/corpus/report-<YYYY-MM-DD>.md` so the
-numbers are kept.
+`printcheck-calibrate --report corpus/report-<YYYY-MM-DD>.md` so the numbers
+are kept. A change to `examples/build.py` is followed by
+`python examples/build.py` and a commit of what it rewrote.
 
 ## Recipes
 
@@ -83,17 +87,17 @@ numbers are kept.
 2. Add the row to `corpus/outcomes.tsv` (columns in `corpus/README.md`).
    Copy the exact file sent into `corpus/files/<date>_<name>.<ext>` if the
    source project will overwrite it.
-3. `calibrate.py --only <id>`. Caught? Then say by which code and stop.
+3. `printcheck-calibrate --only <id>`. Caught? Then say by which code and stop.
 4. Not caught: find the measurement that separates this file from the
-   held prints. `preflight.py <file> --layers all`, `--at <z of failure>`,
+   held prints. `printcheck <file> --layers all`, `--at <z of failure>`,
    `--json out.json`. A rule without a separating measurement is a guess.
 5. Implement it (see `docs/ARCHITECTURE.md`, "Extension points"): the
    threshold in `RULES`, the check in its stage, a synthetic shape in
    `tests/test_shapes.py` if boxes can reproduce the mechanism.
 6. Document: the reason in `docs/RULES.md`, the story in
    `docs/FAILURES.md`, `rule_now` in the corpus row.
-7. Both suites green. If the new rule refuses a held print, it is wrong
-   or too tight; do not ship it.
+7. `pytest` (100 %) and `printcheck-calibrate` green. If the new rule
+   refuses a held print, it is wrong or too tight; do not ship it.
 
 ### Explain a finding to someone
 
@@ -111,6 +115,13 @@ members together, a different split).
    is? A green suite has missed a feature that was modelled wrong before.
 4. Record the outcome in the corpus either way.
 
+### Add an example
+
+Add the shape and where it goes to `examples/build.py`, run it, add the row
+to the tables in `examples/README.md` and `README.md`, and an assertion of
+its verdict to `tests/test_examples.py`. An example exists to show one
+verdict for one clear reason; keep it that small.
+
 ### Add a printer, a material or a stage
 
 `docs/ARCHITECTURE.md`, "Extension points". A new material needs its
@@ -119,9 +130,9 @@ entries in every per-material dict (`warp_length_mm`, `peel_mpa`,
 
 ## Traps
 
-- **Wrong working directory.** `ModuleNotFoundError: printcheck` or
-  `FILE MISSING` on every corpus row: you are not in the parent of
-  `printcheck/`.
+- **Not installed.** `ModuleNotFoundError: printcheck`: run
+  `pip install -e ".[dev]"` in the venv. (Without installing, the scripts
+  only work from a checkout whose folder is named `printcheck`.)
 - **Missing `manifold3d`.** `test_plate_on_legs_pillar` fails because
   the boolean union falls back to separate bodies. Install the
   requirements; do not change the test.
@@ -131,6 +142,9 @@ entries in every per-material dict (`warp_length_mm`, `peel_mpa`,
 - **Origin-centred meshes.** A loose STL centred on (0, 0) has negative
   coordinates; the heat-soak rule then reports the zone as unknown
   instead of judging it. Plate coordinates come only from a `.3mf`.
+- **Coverage numbers from a partial run.** `pytest tests/one_file.py`
+  still applies `fail_under = 100` and fails on coverage alone; add
+  `--cov-fail-under=0` when you only want that file's result.
 - **Slow files.** 30-60 s on a large part is normal. Do not add a
   timeout that kills the simulation.
 - **Plate 1 only.** `load_project` reads `plate_1`; a multi-plate

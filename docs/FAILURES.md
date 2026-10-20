@@ -170,7 +170,7 @@ the centre and refuses a layout that leaves the zone.
 1. Photo of the bed and of the loose faces first. Then the row in
    `corpus/outcomes.tsv`, and the exact file into `corpus/files/` if the
    project will overwrite it (or the model parameters to rebuild it).
-2. `python printcheck/calibrate.py`: is it caught? By which code? If not,
+2. `printcheck-calibrate`: is it caught? By which code? If not,
    find the measurement on the file that separates it from the held prints
    (`--layers`, `--at Z` on the simulation; `--json` for the evidence).
 3. The rule in `preflight.py` or `simulate.py`, its threshold in `RULES`,
