@@ -28,9 +28,18 @@ def verdict(out):
 
 
 def fake_bambu(tmp_path, body):
-    path = tmp_path / "BambuStudio"
-    path.write_text("#!/bin/sh\n" + body + "\n")
-    path.chmod(path.stat().st_mode | stat.S_IEXEC)
+    """A stand-in for Bambu Studio's CLI: `body` is Python run with the same
+    argv (argv[4] is the --export-3mf path), behind a launcher the OS can
+    execute: a .cmd on Windows, a shell script elsewhere."""
+    script = tmp_path / "fake_bambu.py"
+    script.write_text("import shutil, sys\n" + body + "\n")
+    if os.name == "nt":
+        path = tmp_path / "BambuStudio.cmd"
+        path.write_text(f'@"{sys.executable}" "{script}" %*\r\n@exit /b %errorlevel%\r\n')
+    else:
+        path = tmp_path / "BambuStudio"
+        path.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n')
+        path.chmod(path.stat().st_mode | stat.S_IEXEC)
     return str(path)
 
 
@@ -129,7 +138,7 @@ def test_slice_bambu_missing(capsys, monkeypatch, tmp_path):
 
 
 def test_slice_success(capsys, monkeypatch, tmp_path):
-    monkeypatch.setattr(preflight, "BAMBU", fake_bambu(tmp_path, f'cp "{FILM}" "$4"'))
+    monkeypatch.setattr(preflight, "BAMBU", fake_bambu(tmp_path, f"shutil.copy({FILM!r}, sys.argv[4])"))
     out, err = preflight.slice_project(example("bambu", "go_block.3mf"))
     assert err is None and out.endswith("go_block.gcode.3mf") and os.path.exists(out)
     code, text = run(capsys, example("bambu", "go_block.3mf"), "--slice")
@@ -137,7 +146,7 @@ def test_slice_success(capsys, monkeypatch, tmp_path):
 
 
 def test_slice_failure(capsys, monkeypatch, tmp_path):
-    monkeypatch.setattr(preflight, "BAMBU", fake_bambu(tmp_path, "echo broken; exit 3"))
+    monkeypatch.setattr(preflight, "BAMBU", fake_bambu(tmp_path, "print('broken'); sys.exit(3)"))
     out, err = preflight.slice_project(example("bambu", "go_block.3mf"))
     assert out is None and "slicing failed (3)" in err and "broken" in err
 

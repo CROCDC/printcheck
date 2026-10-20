@@ -1,0 +1,5 @@
+# LF everywhere, so files written by examples/build.py match on Windows too.
+* text=auto eol=lf
+*.stl binary
+*.3mf binary
+*.png binary

@@ -27,3 +27,15 @@ jobs:
       - run: python calibrate.py --corpus examples/corpus.tsv --sweep examples/workspace
       # The real corpus: every known failure caught, no held print refused.
       - run: python calibrate.py
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t printcheck .
+      # The suite inside the image, from the package's own folder.
+      - run: docker run --rm -w /printcheck --entrypoint python printcheck -m pytest --cov
+      # The command as a user runs it, on a file mounted from the host.
+      - run: |
+          docker run --rm -v "$PWD/examples:/work" printcheck stl/go_block.stl
+          ! docker run --rm -v "$PWD/examples:/work" printcheck stl/nogo_post.stl

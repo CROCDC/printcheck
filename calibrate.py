@@ -148,7 +148,7 @@ def main(argv=None):
             data = run_engine([f])
             fails, warns = codes(data, "FAIL"), codes(data, "WARN")
             tag = " (corpus)" if f in labelled else ""
-            name = os.path.relpath(f, a.sweep)
+            name = os.path.relpath(f, a.sweep).replace(os.sep, "/")   # the same report on Windows
             lines.append(f"| {name}{tag} | {data['verdict']} | {', '.join(fails) or '-'} | {', '.join(warns) or '-'} |")
 
     text = "\n".join(lines)

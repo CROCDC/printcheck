@@ -12,7 +12,8 @@ a sliced project with synthetic G-code, and as the parts of a demo project
 in the kailua layout (`workspace/demo`). `corpus.tsv` labels them the way
 `corpus/outcomes.tsv` labels real prints, for `calibrate.py --corpus`.
 
-Output is byte-for-byte deterministic (fixed zip timestamps, no random
+Output is byte-for-byte deterministic on every platform (fixed zip
+timestamps, the zip's creating OS fixed, LF line endings, no random
 sampling), so `tests/test_examples.py` can tell a stale example apart.
 """
 
@@ -143,9 +144,12 @@ def write_3mf(path, parts, settings, gcode=None, slice_info="", plate=None, obje
         files["Metadata/slice_info.config"] = slice_info
         files["Metadata/plate_1.json"] = json.dumps(plate or {}, sort_keys=True)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(path, "w") as z:
         for name, text in files.items():
-            z.writestr(zipfile.ZipInfo(name, STAMP), text)
+            info = zipfile.ZipInfo(name, STAMP)
+            # ZipInfo records the OS it runs on; fixed, Windows writes the same bytes.
+            info.create_system = 3
+            z.writestr(info, text)
     return path
 
 
@@ -299,7 +303,7 @@ def build(out=HERE):
     for part, d in DEMO_PARTS.items():
         pdir = os.path.join(demo, "parts", part)
         os.makedirs(pdir, exist_ok=True)
-        with open(put(os.path.join(pdir, "spec.py")), "w") as fh:
+        with open(put(os.path.join(pdir, "spec.py")), "w", newline="\n") as fh:
             fh.write(DEMO_SPEC.format(doc=d["doc"], extra=d["extra"], files=json.dumps(d["files"])))
         for variant in d["meshes"]:
             _stl(meshes[variant], put(os.path.join(pdir, "meshes", f"{variant}.stl")))
