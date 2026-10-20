@@ -12,7 +12,7 @@ import numpy as np
 from printcheck.preflight import (_lst, _parse_meshes, _transform, _xml_attr, check_gcode,
                                   check_settings, check_slice_info, load_project)
 
-from conftest import box, example, found, write_zip
+from helpers import box, example, found, write_zip
 
 
 # ----------------------------------------------------------------- 3MF

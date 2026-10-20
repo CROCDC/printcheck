@@ -11,7 +11,7 @@ from shapely.geometry import Polygon, box as sbox
 from printcheck import simulate as S
 from printcheck.preflight import Report
 
-from conftest import box, found, part
+from helpers import box, found, part
 
 
 # ----------------------------------------------------------------- helpers

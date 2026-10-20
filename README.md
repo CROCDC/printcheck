@@ -299,6 +299,7 @@ python -m pytest tests/test_shapes.py -q     # one file
 | `tests/test_cli.py` | every CLI flag and input type, slicing through a fake Bambu Studio |
 | `tests/test_presets.py`, `test_layout.py`, `test_views.py`, `test_calibrate.py` | the tools around the engine |
 | `tests/test_examples.py` | `examples/` is what `build.py` writes, and each example gives its verdict |
+| `tests/helpers.py`, `tests/conftest.py` | shared shapes and lookups; the `rep` and `rules` fixtures |
 
 CI (`.github/workflows/ci.yml`) runs the suite on Python 3.10 and 3.12,
 then the example corpus and the real corpus through `calibrate.py`.

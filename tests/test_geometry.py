@@ -12,7 +12,7 @@ from printcheck import preflight as P
 from printcheck.preflight import (check_adhesion, check_inlay, check_members, check_mesh, geoms,
                                   groups, gyration, layer_profile, run_parts, section, thinnest)
 
-from conftest import box, found, part
+from helpers import box, found, part
 
 
 def union(*meshes):
@@ -55,6 +55,16 @@ def test_material_of():
     assert printcheck.material_of("Generic PETG HF") == "PETG"
     assert printcheck.material_of(None) == "PETG"
     assert printcheck.material_of("mystery", default="TPU") == "TPU"
+
+
+def test_package_file_loads_as_a_bare_module():
+    # pytest's collection loads the repository root's __init__.py on its own,
+    # with no package, whenever the checkout folder is not named printcheck.
+    with open(printcheck.__file__) as fh:
+        code = compile(fh.read(), printcheck.__file__, "exec")
+    ns = {"__name__": "__init__", "__package__": ""}
+    exec(code, ns)
+    assert "RULES" not in ns and ns["material_of"]("PLA") == "PLA"
 
 
 # ----------------------------------------------------------------- mesh

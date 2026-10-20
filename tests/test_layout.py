@@ -9,7 +9,7 @@ import pytest
 
 from printcheck import layout, presets, views
 
-from conftest import box, example
+from helpers import box, example
 
 DEMO = example("workspace", "demo")
 

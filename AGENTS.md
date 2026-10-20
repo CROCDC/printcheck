@@ -142,6 +142,11 @@ entries in every per-material dict (`warp_length_mm`, `peel_mpa`,
 - **Origin-centred meshes.** A loose STL centred on (0, 0) has negative
   coordinates; the heat-soak rule then reports the zone as unknown
   instead of judging it. Plate coordinates come only from a `.3mf`.
+- **Test helpers come from `helpers.py`, never `conftest`.** pytest runs
+  in importlib mode (the repository root is the package, under whatever
+  folder name it was cloned into), and in that mode `from conftest import`
+  fails. Shared shapes and lookups go in `tests/helpers.py`; `conftest.py`
+  keeps only fixtures.
 - **Coverage numbers from a partial run.** `pytest tests/one_file.py`
   still applies `fail_under = 100` and fails on coverage alone; add
   `--cov-fail-under=0` when you only want that file's result.

@@ -12,8 +12,12 @@ and reaches all of them.
     from printcheck import check_print                          # from a project
 """
 
-from .preflight import (RULES, Report, check_adhesion, check_members,  # noqa: F401
-                        check_mesh, check_simulation, run_parts)
+# The repository root is this package, so pytest's collection also loads
+# this file on its own, as a bare module with no package (to look for a
+# setup_module); there is nothing to import then.
+if __package__:
+    from .preflight import (RULES, Report, check_adhesion, check_members,  # noqa: F401
+                            check_mesh, check_simulation, run_parts)
 
 MATERIALS = ("PETG", "PLA", "ABS", "ASA", "PA", "PC", "TPU")
 

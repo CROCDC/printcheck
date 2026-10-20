@@ -12,7 +12,7 @@ import pytest
 
 from printcheck import preflight
 
-from conftest import REPO, box, example, write_zip
+from helpers import REPO, box, example, write_zip
 
 ENGINE = os.path.join(REPO, "preflight.py")
 FILM = example("bambu", "nogo_label_tower_film.gcode.3mf")

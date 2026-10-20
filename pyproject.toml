@@ -44,7 +44,9 @@ packages = ["printcheck"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-p no:cacheprovider"
+# importlib mode: the repository root is the package and has an __init__.py,
+# so the default mode would import it under the checkout folder's name.
+addopts = "-p no:cacheprovider --import-mode=importlib"
 filterwarnings = ["ignore::DeprecationWarning", "ignore::RuntimeWarning"]
 
 [tool.coverage.run]

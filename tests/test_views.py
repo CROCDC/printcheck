@@ -5,7 +5,7 @@ import builtins
 
 from printcheck import views
 
-from conftest import box, part
+from helpers import box, part
 
 
 def test_cut_both_axes():

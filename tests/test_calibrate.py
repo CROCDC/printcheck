@@ -11,7 +11,7 @@ import pytest
 
 from printcheck import calibrate
 
-from conftest import REPO, example
+from helpers import REPO, example
 
 FIELDS = open(os.path.join(REPO, "corpus", "outcomes.tsv")).readline().rstrip("\n").split("\t")
 

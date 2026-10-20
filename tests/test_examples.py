@@ -8,7 +8,7 @@ import pytest
 
 from printcheck import preflight
 
-from conftest import EXAMPLES, example
+from helpers import EXAMPLES, example
 
 
 def load(path, name):
